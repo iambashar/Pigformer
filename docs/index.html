@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PigFormer &mdash; What's Under the Skin? Estimating Swine Body Condition</title>
+<meta name="description" content="PigFormer: end-to-end two-stage system for regressing pig backfat, loin, and total tissue depth from a ceiling-mounted RGB-D camera. CV4Animals @ CVPR 2026." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='14' font-size='14'%3E%F0%9F%90%96%3C/text%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="page-header">
+  <h1>What's Under the Skin?<br /><span class="subtitle">Estimating Swine Body Condition</span></h1>
+
+  <ol class="authors">
+    <li><a href="mailto:basharmk@msu.edu">Mk Bashar</a><sup>1</sup></li>
+    <li><a href="mailto:kbhatti2@nebraska.edu">Kuljit Bhatti</a><sup>2</sup></li>
+    <li><a href="mailto:gary.rohrer@usda.gov">Gary Rohrer</a><sup>3</sup></li>
+    <li><a href="mailto:gemus@msu.edu">Madonna Benjamin</a><sup>4</sup></li>
+    <li><a href="mailto:tami.brownbrandl@unl.edu">Tami Brown-Brandl</a><sup>2</sup></li>
+    <li><a href="mailto:dmorris@msu.edu">Daniel Morris</a><sup>5</sup></li>
+  </ol>
+
+  <ol class="affils">
+    <li><sup>1</sup>Computer Science and Engineering, Michigan State University</li>
+    <li><sup>2</sup>Department of Biological Systems Engineering, University of Nebraska&ndash;Lincoln</li>
+    <li><sup>3</sup>USDA Meat Animal Research Center</li>
+    <li><sup>4</sup>College of Veterinary Medicine, Michigan State University</li>
+    <li><sup>5</sup>Department of Electrical and Computer Engineering, Michigan State University</li>
+  </ol>
+
+  <p class="venue">CV4Animals Workshop &middot; CVPR 2026</p>
+
+  <nav class="badges">
+    <a href="https://github.com/iambashar/Pigformer" class="badge">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.55v-2.02c-3.2.7-3.87-1.36-3.87-1.36-.52-1.32-1.27-1.67-1.27-1.67-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.02 1.75 2.68 1.24 3.34.95.1-.74.4-1.24.72-1.53-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.28 1.18-3.09-.12-.29-.51-1.46.11-3.04 0 0 .97-.31 3.18 1.18a11.05 11.05 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.58.23 2.75.11 3.04.74.81 1.18 1.83 1.18 3.09 0 4.43-2.69 5.41-5.25 5.69.41.35.78 1.05.78 2.11v3.13c0 .3.21.67.8.55C20.21 21.39 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5Z"/></svg>
+      Code
+    </a>
+    <a href="#bibtex" class="badge">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4M5 3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.5L14.5 3H5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+      Cite
+    </a>
+  </nav>
+</header>
+
+<main>
+
+<section id="pipeline">
+  <figure>
+    <img src="pipeline.png" alt="PigFormer two-stage pipeline: ceiling-mounted depth camera → Stage 1 geometric front-end (SAM3-to-MaskDINO segmentation + ground-plane removal + orientation normalization) → 96×224 height map → Stage 2 Slice Attention Encoder regressing fat, loin, and total tissue depth at the last rib." />
+    <figcaption>
+      Two-stage pipeline. A ceiling-mounted depth camera captures raw frames.
+      <b>Stage 1</b> (geometric front-end) segments the pig, removes the ground
+      plane, and rotates the height map so each pig faces right. <b>Stage 2</b>
+      (Slice Attention Encoder) tokenizes the 224 cross-sectional slices of the
+      height map and regresses backfat, loin muscle, and total tissue depth at
+      the last rib.
+    </figcaption>
+  </figure>
+</section>
+
+<section id="abstract">
+  <h2>Abstract</h2>
+  <p>
+    Sow body condition is an important indicator for growers as it has a large
+    impact on lactation performance and piglet survival. However, body
+    condition measures used during production, such as visual scoring and
+    calipers, correlate poorly with underlying tissue composition. Ultrasound
+    scans can provide direct measurements of subcutaneous backfat thickness
+    and loin muscle depth, but their operation is labor intensive and not
+    scalable for production. We present <b>PigFormer</b>, an end-to-end
+    two-stage system that takes raw depth frames from a ceiling-mounted RGB-D
+    camera and predicts subcutaneous backfat thickness, loin muscle depth,
+    and total tissue thickness at the last rib. Stage 1 is a geometric
+    front-end that converts raw depth into a standardized height map via
+    SAM3-to-MaskDINO segmentation distillation, ground-plane removal, and
+    orientation normalization. Stage 2 is a Slice Attention Encoder that
+    treats each height map as a sequence of cross-sectional slices and
+    captures spatial relationships along the full dorsal surface. On a
+    multi-site dataset of 319 sow and gilt instances (6,705 frames) from two
+    facilities, PigFormer achieves 2.43&nbsp;mm backfat MAE and 3.87&nbsp;mm
+    overall MAE. It outperforms strong single-stage ResNet-18 and ViT-small
+    baselines that feed raw depth directly to a pretrained backbone,
+    isolating the contribution of Stage 1.
+  </p>
+</section>
+
+<section id="results">
+  <h2>Results</h2>
+  <p class="caption-prose">
+    Held-out test results on 79 sow / gilt instances. MAE in mm. Per-frame
+    inference measured on A100 with batch&nbsp;=&nbsp;1 (MaskDINO Stage 1 in
+    fp16; UNet Stage 1, single-stage backbones, and PigFormer Stage 2 in
+    fp32). Single-stage baselines feed raw depth directly to an
+    ImageNet-pretrained backbone and predict fat and loin only (total is
+    <span class="math">y&#770;<sub>f</sub> + y&#770;<sub>l</sub></span> at
+    evaluation). PigFormer numbers are 4-fold cross-validation ensembles
+    with output aggregation. Best MAE in <b>bold</b>.
+  </p>
+
+  <div class="results-table-wrap">
+    <table class="results">
+      <thead>
+        <tr>
+          <th rowspan="2">Method</th>
+          <th rowspan="2">Backbone</th>
+          <th colspan="2">Inference (ms / frame)</th>
+          <th colspan="4">MAE (mm) &darr;</th>
+        </tr>
+        <tr>
+          <th>Stage 1</th>
+          <th>Stage 2</th>
+          <th>Fat</th>
+          <th>Loin</th>
+          <th>Total</th>
+          <th>Overall</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>ViT-small (single-stage)</td>
+          <td>ViT-S/16</td>
+          <td>&mdash;</td><td>4.98</td>
+          <td>3.57</td><td>7.29</td><td>8.16</td><td>6.34</td>
+        </tr>
+        <tr>
+          <td>ResNet-18 (single-stage)</td>
+          <td>ResNet-18</td>
+          <td>&mdash;</td><td>2.88</td>
+          <td>2.88</td><td>6.10</td><td>5.81</td><td>4.93</td>
+        </tr>
+        <tr class="ours">
+          <td><b>PigFormer</b></td>
+          <td>MaskDINO (R50-300q-9L)</td>
+          <td>106.92</td><td>0.50</td>
+          <td>2.43</td>
+          <td><b>5.01</b></td>
+          <td><b>4.19</b></td>
+          <td><b>3.87</b></td>
+        </tr>
+        <tr class="ours">
+          <td><b>PigFormer</b></td>
+          <td>Pruned MaskDINO (R18-50q-5L)</td>
+          <td>52.73</td><td>0.50</td>
+          <td><b>2.34</b></td>
+          <td>5.27</td><td>4.20</td><td>3.94</td>
+        </tr>
+        <tr class="ours">
+          <td><b>PigFormer</b></td>
+          <td>UNet (MobileNetV3-Small)</td>
+          <td>6.58</td><td>0.50</td>
+          <td>2.40</td><td>5.20</td><td>4.26</td><td>3.95</td>
+        </tr>
+        <tr class="ref-row">
+          <td>Human Ultrasound Std</td>
+          <td>&mdash;</td>
+          <td>&mdash;</td><td>&mdash;</td>
+          <td>1.30</td><td>2.02</td><td>2.29</td><td>1.87</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="footnote">
+    End-to-end PigFormer with the UNet Stage 1 runs in &asymp; 7&nbsp;ms /
+    frame on a single A100, fast enough for real-time monitoring on an
+    installed-camera stream. The pruned MaskDINO retains the detection-style
+    inductive bias for out-of-distribution content (handlers, empty pens) at
+    half the latency of the original.
+  </p>
+</section>
+
+<section id="bibtex">
+  <h2>Citation</h2>
+  <div class="bibtex">
+    <button class="copy-btn" type="button" data-copy-target="#bibtex-pre" aria-label="Copy BibTeX">Copy</button>
+<pre id="bibtex-pre">@inproceedings{bashar2026pigformer,
+  title     = {What's Under the Skin? Estimating Swine Body Condition},
+  author    = {Bashar, Mk and Bhatti, Kuljit and Rohrer, Gary
+               and Benjamin, Madonna and Brown-Brandl, Tami
+               and Morris, Daniel},
+  booktitle = {CV4Animals Workshop, IEEE/CVF Conference on Computer Vision
+               and Pattern Recognition (CVPR)},
+  year      = {2026}
+}</pre>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p>
+    &copy; 2026 The Authors &middot;
+    Code released under the MIT License &middot;
+    <a href="https://github.com/iambashar/Pigformer">github.com/iambashar/Pigformer</a>
+  </p>
+</footer>
+
+<script>
+document.querySelectorAll(".copy-btn").forEach(btn => {
+  btn.addEventListener("click", async () => {
+    const target = document.querySelector(btn.dataset.copyTarget);
+    if (!target) return;
+    try {
+      await navigator.clipboard.writeText(target.innerText);
+      const original = btn.textContent;
+      btn.textContent = "Copied!";
+      btn.classList.add("copied");
+      setTimeout(() => { btn.textContent = original; btn.classList.remove("copied"); }, 1500);
+    } catch (e) {
+      btn.textContent = "Copy failed";
+    }
+  });
+});
+</script>
+
+</body>
+</html>
