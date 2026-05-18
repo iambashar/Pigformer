@@ -1,10 +1,32 @@
 cff-version: 1.2.0
 message: "If you use PigFormer in your research, please cite the paper."
-title: "PigFormer: Transformer-based pig body-condition regression from Azure Kinect depth height maps"
+title: "PigFormer: What's Under the Skin? Estimating Swine Body Condition"
 type: software
 authors:
   - family-names: Bashar
     given-names: Mk
+    email: basharmk@msu.edu
+    affiliation: Michigan State University
+  - family-names: Bhatti
+    given-names: Kuljit
+    email: kbhatti2@nebraska.edu
+    affiliation: University of Nebraska--Lincoln
+  - family-names: Rohrer
+    given-names: Gary
+    email: gary.rohrer@usda.gov
+    affiliation: USDA Meat Animal Research Center
+  - family-names: Benjamin
+    given-names: Madonna
+    email: gemus@msu.edu
+    affiliation: Michigan State University
+  - family-names: Brown-Brandl
+    given-names: Tami
+    email: tami.brownbrandl@unl.edu
+    affiliation: University of Nebraska--Lincoln
+  - family-names: Morris
+    given-names: Daniel
+    email: dmorris@msu.edu
+    affiliation: Michigan State University
 year: 2026
 version: "0.1.0"
 license: MIT

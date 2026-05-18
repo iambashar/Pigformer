@@ -4,11 +4,9 @@ Hold-out test evaluation.
 Loads a checkpoint saved by train.py and reports per-bag MAE / NMAE-IQR on the
 test set. Two aggregation modes are supported:
 
-- ``input`` (default, paper Table 2): average height maps across all frames of
-  a bag into a single input, then one forward pass per bag. This is what
-  produces the paper's 3.91 mm overall MAE number.
-- ``output``: forward every frame, average the predictions. Slightly worse
-  under the paper's checkpoint (~4.00 mm).
+- ``input`` (default): average height maps across all frames of a bag into a
+  single input, then one forward pass per bag.
+- ``output``: forward every frame, average the predictions.
 
 Example:
 

@@ -1,26 +1,41 @@
 # PigFormer
 
 End-to-end two-stage system for regressing pig body-condition measurements
-(backfat, loin muscle depth, total tissue depth at the last rib) from a
-ceiling-mounted Azure Kinect / Orbbec depth camera.
+(backfat thickness, loin muscle depth, total tissue depth at the last rib)
+from a ceiling-mounted Azure Kinect / Orbbec depth camera.
+
+![PigFormer pipeline](docs/pipeline.png)
 
 - **Stage 1 (geometric front-end)** — depth-only segmentation (SAM3-to-MaskDINO
-  distillation), RANSAC ground-plane removal, BEV projection, and
-  orientation normalization. Produces a standardized 96×224 height map.
+  distillation), RANSAC ground-plane removal, BEV projection, and orientation
+  normalization. Produces a standardized 96×224 height map.
 - **Stage 2 (Slice Attention Encoder)** — a single RoPE transformer layer
-  over 224 cross-sectional slice tokens, dual mean+max pooling, MLP head
-  to three regression targets.
+  over 224 cross-sectional slice tokens, dual mean+max pooling, MLP head to
+  three regression targets.
 
-Three interchangeable Stage 1 segmenters are supported:
+## Results
 
-| Stage 1 | Backbone | Stage 1 (ms / frame, A100) | End-to-end MAE |
-|---|---|---:|---:|
-| MaskDINO (paper) | R50, 300q, 9 dec | 106.92 | 3.87 mm |
-| Pruned MaskDINO | R18, 50q, 5 dec | 52.73 | 3.94 mm |
-| UNet | MobileNetV3-Small | 6.58 | 3.95 mm |
+Held-out test results on 79 sow / gilt instances. MAE in mm. Per-frame
+inference measured on A100 with batch = 1 (MaskDINO Stage 1 in fp16; UNet
+Stage 1, single-stage backbones, and PigFormer Stage 2 in fp32). Single-stage
+baselines feed raw depth directly to an ImageNet-pretrained backbone and
+predict fat and loin only (total is $\hat{y}_f + \hat{y}_l$ at evaluation).
+PigFormer numbers are 4-fold cross-validation ensembles with output
+aggregation. Best MAE in **bold**.
 
-Stage 2 takes ≈0.50 ms / frame on top. End-to-end with the UNet front-end
-is ≈7 ms / frame, fast enough for real-time monitoring on a single A100.
+| Method | Backbone | Stage 1 (ms) | Stage 2 (ms) | Fat ↓ | Loin ↓ | Total ↓ | Overall ↓ |
+|---|---|---:|---:|---:|---:|---:|---:|
+| ViT-small (single-stage) | ViT-S/16 | — | 4.98 | 3.57 | 7.29 | 8.16 | 6.34 |
+| ResNet-18 (single-stage) | ResNet-18 | — | 2.88 | 2.88 | 6.10 | 5.81 | 4.93 |
+| **PigFormer** | MaskDINO (R50-300q-9L) | 106.92 | 0.50 | 2.43 | **5.01** | **4.19** | **3.87** |
+| **PigFormer** | Pruned MaskDINO (R18-50q-5L) | 52.73 | 0.50 | **2.34** | 5.27 | 4.20 | 3.94 |
+| **PigFormer** | UNet (MobileNetV3-Small) | 6.58 | 0.50 | 2.40 | 5.20 | 4.26 | 3.95 |
+| Human Ultrasound Std | — | — | — | 1.30 | 2.02 | 2.29 | 1.87 |
+
+End-to-end with the UNet front-end is ≈7 ms / frame, fast enough for
+real-time monitoring on a single A100. The pruned MaskDINO retains the
+detection-style inductive bias for out-of-distribution content (handlers,
+empty pens) at half the latency of the original.
 
 ## Repo layout
 
@@ -54,29 +69,27 @@ pip install -e .
 # pip install -e ".[dev]"
 ```
 
-## Reproduce the paper's test numbers
+## Reproduce the paper's headline result (3.87 mm overall MAE)
 
-The bundled `weights/pigformer_fold0.pt` checkpoint regenerates the paper's
-fold-0 test numbers (3.91 mm overall on single-fold-0 / input-aggregation;
-3.87 mm on 4-fold ensemble / output-aggregation):
+The headline number is a 4-fold ensemble with output aggregation:
 
 ```bash
-# Single-fold-0 (matches paper Table 3.91 mm overall)
-python evaluate.py \
-    --checkpoint weights/pigformer_fold0.pt \
-    --dataset data/dataset.h5 --labels data/label.h5 --split_json data/split.json
-
-# 4-fold ensemble (matches paper Table 1 headline 3.87 mm overall)
 python evaluate_ensemble.py \
     --checkpoints results/fold0/best.pt results/fold1/best.pt results/fold2/best.pt results/fold3/best.pt \
     --dataset data/dataset.h5 --labels data/label.h5 --split_json data/split.json \
     --aggregation output
 ```
 
-`--aggregation input` averages height maps before one forward pass (3.91 mm).
-`--aggregation output` forwards every frame and averages predictions
-(3.87 mm). The paper headline uses output aggregation across the 4-fold
-ensemble; the bundled single-fold checkpoint reproduces the 3.91 mm number.
+Single-fold evaluation from one checkpoint:
+
+```bash
+python evaluate.py \
+    --checkpoint weights/pigformer_fold0.pt \
+    --dataset data/dataset.h5 --labels data/label.h5 --split_json data/split.json
+```
+
+`--aggregation input` averages height maps before one forward pass.
+`--aggregation output` forwards every frame and averages predictions.
 
 ## Train from scratch (paper protocol)
 
@@ -118,14 +131,15 @@ share the same pipeline downstream of segmentation — switch by passing
 
 ## Citation
 
-If you use this code or the trained checkpoints, please cite:
-
 ```bibtex
 @inproceedings{bashar2026pigformer,
-  title={What's Under the Skin? Estimating Swine Body Condition},
-  author={Bashar, Mk and ...},
-  booktitle={CV4Animals Workshop, CVPR},
-  year={2026}
+  title     = {What's Under the Skin? Estimating Swine Body Condition},
+  author    = {Bashar, Mk and Bhatti, Kuljit and Rohrer, Gary
+               and Benjamin, Madonna and Brown-Brandl, Tami
+               and Morris, Daniel},
+  booktitle = {CV4Animals Workshop, IEEE/CVF Conference on Computer Vision
+               and Pattern Recognition (CVPR)},
+  year      = {2026}
 }
 ```
 

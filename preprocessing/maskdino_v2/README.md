@@ -147,7 +147,7 @@ Before declaring v2 the new default, verify:
 1. **Mask quality on the existing test split**: AP@[.5:.95] within ~1–2 of v1.
 2. **Downstream MAE**: feed v2 masks into `build_height_dataset.py` and
    train one PigFormer fold-0 from scratch. MAE should be within
-   ~0.1 mm of the v1 number (3.91 mm).
+   ~0.1 mm of the v1 (original MaskDINO) result.
 3. **Inference latency**: re-run `scripts/benchmark_maskdino_quick.py`
    pointed at the v2 config + weights. Target ~16 ms FP32 / ~11 ms with
    compile.
