@@ -1,0 +1,72 @@
+# MaskDINO v2 — efficient retrain for pig + upper-body depth segmentation.
+#
+# Architectural deltas vs preprocessing/maskdino/maskdino_R50_depth_instance_endpoint.yaml:
+#   * 1-channel raw depth input (vs 3-channel encoded RGB).
+#     - INPUT.FORMAT = "L"            (single-channel, see custom mapper)
+#     - MODEL.PIXEL_MEAN/STD = [μ, σ] from training fold (units: meters).
+#     - MODEL.RESNETS.STEM_IN_CHANNELS = 1
+#   * Decoder cut from 9 → 3 layers.
+#   * Object queries cut from 300 → 10.
+#   * DN noisy queries cut 100 → 20 (proportional to query budget).
+#   * Custom dataset mapper "depth_1ch_instance" (see preprocessing/maskdino_v2/mapper.py).
+#
+# Expected S1 inference latency on H200, batch=1, 576×640: ~16 ms (vs 59 ms).
+#
+# PIXEL_MEAN / PIXEL_STD computed on the ALIGNED dataset (pig_depth_combined_v2_aligned)
+# where depth is read directly from the consolidated source's `depth_maps_undistorted` field
+# — the same pixel grid the GT polygons were drawn against.
+# 1,213 train images, ~319M valid pixels: μ = 2.0208 m, σ = 0.4158 m.
+
+_BASE_: ../../coco/instance-segmentation/maskdino_R50_bs16_50ep_3s_dowsample1_2048_bitmask.yaml
+
+MODEL:
+  WEIGHTS: ""  # set via --opts MODEL.WEIGHTS=<r50_conv1_1ch.pkl> at launch
+  # Stem in_channels is derived from len(PIXEL_MEAN); no STEM_IN_CHANNELS field exists in
+  # this Detectron2 version. Length-1 PIXEL_MEAN automatically gives a 1-channel conv1.
+  PIXEL_MEAN: [2.0208]
+  PIXEL_STD:  [0.4158]
+  SEM_SEG_HEAD:
+    # 2 classes: pig + pig_upper_body, matching production v1 multiclass weights.
+    NUM_CLASSES: 2
+  MaskDINO:
+    INITIALIZE_BOX_TYPE: "bitmask"
+    NUM_OBJECT_QUERIES: 10
+    DEC_LAYERS: 3      # actual = DEC_LAYERS (predictor adds the +1 init-loss layer internally)
+    DN: "seg"
+    DN_NUM: 20
+    ENDPOINT_ON: True
+    ENDPOINT_WEIGHT: 2.0
+    ENDPOINT_SMOOTH_L1_BETA: 0.05
+
+DATASETS:
+  TRAIN: ("pig_depth_v2_train",)
+  TEST: ("pig_depth_v2_val",)
+
+SOLVER:
+  IMS_PER_BATCH: 4
+  BASE_LR: 0.00005
+  MAX_ITER: 10000
+  STEPS: (8000, 9000)
+  CHECKPOINT_PERIOD: 1000
+
+INPUT:
+  FORMAT: "L"                       # single-channel
+  DATASET_MAPPER_NAME: "depth_1ch_instance"
+  RANDOM_FLIP: "horizontal"
+  CROP:
+    ENABLED: False
+  MIN_SIZE_TRAIN: (576,)
+  MAX_SIZE_TRAIN: 640
+  MIN_SIZE_TRAIN_SAMPLING: "choice"
+  MIN_SIZE_TEST: 576
+  MAX_SIZE_TEST: 640
+
+TEST:
+  DETECTIONS_PER_IMAGE: 2
+  EVAL_PERIOD: 1000
+
+DATALOADER:
+  FILTER_EMPTY_ANNOTATIONS: True
+  NUM_WORKERS: 4
+
+OUTPUT_DIR: "./output/pig_depth_v2_endpoint"

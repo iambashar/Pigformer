@@ -1,0 +1,9 @@
+_BASE_: ./maskdino_R50_depth_instance.yaml
+
+MODEL:
+  MaskDINO:
+    ENDPOINT_ON: True
+    ENDPOINT_WEIGHT: 2.0
+    ENDPOINT_SMOOTH_L1_BETA: 0.05
+
+OUTPUT_DIR: "./output/pig_depth_r50_instance_endpoint"

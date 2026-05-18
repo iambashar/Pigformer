@@ -1,0 +1,29 @@
+## Required edits in MaskDINO/train_net.py
+##
+## Apply with:  cd /mnt/gs21/scratch/basharmk/data/unl/MaskDINO && patch -p1 < train_net_patch.diff
+## (or apply by hand — there are only two hunks).
+
+--- a/train_net.py
++++ b/train_net.py
+@@ -315,6 +315,9 @@ class Trainer(DefaultTrainer):
+         # Instance segmentation dataset mapper
+         if cfg.INPUT.DATASET_MAPPER_NAME == "coco_instance_lsj":
+             mapper = COCOInstanceNewBaselineDatasetMapper(cfg, True)
+             return build_detection_train_loader(cfg, mapper=mapper)
++        elif cfg.INPUT.DATASET_MAPPER_NAME == "depth_1ch_instance":
++            from maskdino.data.dataset_mappers.depth_1ch_dataset_mapper import Depth1ChannelDatasetMapper
++            mapper = Depth1ChannelDatasetMapper(cfg, True)
++            return build_detection_train_loader(cfg, mapper=mapper)
+         elif cfg.INPUT.DATASET_MAPPER_NAME == "coco_instance_detr":
+             mapper = DetrDatasetMapper(cfg, True)
+             return build_detection_train_loader(cfg, mapper=mapper)
+
+## Also add the test-loader branch (search for build_test_loader / DATASET_MAPPER_NAME and
+## mirror the same elif). Detectron2's default test mapper is fine for this dataset because
+## it just calls utils.read_image — but utils.read_image cannot read 1-channel uint16 PNGs
+## as float32 meters, so the v2 test loader must use Depth1ChannelDatasetMapper too:
+##
+##     elif cfg.INPUT.DATASET_MAPPER_NAME == "depth_1ch_instance":
+##         from maskdino.data.dataset_mappers.depth_1ch_dataset_mapper import Depth1ChannelDatasetMapper
+##         mapper = Depth1ChannelDatasetMapper(cfg, False)
+##         return build_detection_test_loader(cfg, dataset_name, mapper=mapper)

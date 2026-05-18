@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use PigFormer in your research, please cite the paper."
+title: "PigFormer: Transformer-based pig body-condition regression from Azure Kinect depth height maps"
+type: software
+authors:
+  - family-names: Bashar
+    given-names: Mk
+year: 2026
+version: "0.1.0"
+license: MIT

@@ -1,0 +1,10 @@
+_BASE_: ./maskdino_R50_depth_instance_endpoint.yaml
+
+MODEL:
+  SEM_SEG_HEAD:
+    NUM_CLASSES: 2
+
+TEST:
+  DETECTIONS_PER_IMAGE: 2
+
+OUTPUT_DIR: "./output/pig_depth_r50_instance_endpoint_pig_upper_body"

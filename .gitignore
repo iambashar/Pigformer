@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.env
+.ipynb_checkpoints/
+
+# Large binaries — users should fetch/produce these themselves
+data/*.h5
+data/*.json
+weights/*.pt
+weights/*.pth
+weights/*.tar
+results/
+
+# Editor / OS cruft
+.vscode/
+.idea/
+.DS_Store
