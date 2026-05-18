@@ -4,7 +4,9 @@ End-to-end two-stage system for regressing pig body-condition measurements
 (backfat thickness, loin muscle depth, total tissue depth at the last rib)
 from a ceiling-mounted Azure Kinect / Orbbec depth camera.
 
-![PigFormer pipeline](docs/pipeline.png)
+**Project page:** <https://pigformer.github.io>
+
+![PigFormer pipeline](https://pigformer.github.io/pipeline.png)
 
 - **Stage 1 (geometric front-end)** — depth-only segmentation (SAM3-to-MaskDINO
   distillation), RANSAC ground-plane removal, BEV projection, and orientation
