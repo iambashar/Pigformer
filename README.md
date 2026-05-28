@@ -149,4 +149,4 @@ See `CITATION.cff` for the canonical machine-readable form.
 
 ## License
 
-MIT (see `LICENSE`).
+GNU General Public License v3.0 (GPLv3). See `LICENSE`.
