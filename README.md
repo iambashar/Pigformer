@@ -6,7 +6,7 @@ from a ceiling-mounted Azure Kinect / Orbbec depth camera.
 
 **Project page:** <https://pigformer.github.io>
 
-![PigFormer pipeline](https://pigformer.github.io/pipeline.png)
+![PigFormer pipeline](pipeline.png)
 
 - **Stage 1 (geometric front-end)** — depth-only segmentation (SAM3-to-MaskDINO
   distillation), RANSAC ground-plane removal, BEV projection, and orientation
