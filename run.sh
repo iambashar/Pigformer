@@ -1,3 +1,4 @@
+# Needed to run in cluster enviroment
 source /etc/profile.d/modules.sh
 module purge
 module load Miniforge3

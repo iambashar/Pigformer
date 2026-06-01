@@ -25,7 +25,7 @@ predict fat and loin only (total is $\hat{y}_f + \hat{y}_l$ at evaluation).
 PigFormer numbers are 4-fold cross-validation ensembles with output
 aggregation. Best MAE in **bold**.
 
-| Method | Backbone | Stage 1 (ms) | Stage 2 (ms) | Fat ↓ | Loin ↓ | Total ↓ | Overall ↓ |
+| Method | Backbone | Stage 1 (ms) | Stage 2 (ms) | Fat (mm) ↓ | Loin (mm) ↓ | Total (mm) ↓ | Overall (mm) ↓ |
 |---|---|---:|---:|---:|---:|---:|---:|
 | ViT-small (single-stage) | ViT-S/16 | — | 4.98 | 3.57 | 7.29 | 8.16 | 6.34 |
 | ResNet-18 (single-stage) | ResNet-18 | — | 2.88 | 2.88 | 6.10 | 5.81 | 4.93 |
